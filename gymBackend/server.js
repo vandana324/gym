@@ -41,11 +41,11 @@ app.get('/debug', (req, res) => {
   res.json({
     status: 'Server is running',
     mongoUri: process.env.MONGO_URI,
-    mongooseState: mongoose.connection.readyState, // 0 = disconnected, 1 = connected
+    mongooseState: mongoose.connection.readyState, 
   });
 });
 
-// 404 Route Handler
+
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });

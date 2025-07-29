@@ -1,3 +1,4 @@
+
 const User = require('../models/user');
 
 // Get all users (for superadmin/admin)
@@ -10,6 +11,69 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.updateUser = async (req, res) => {
+  try {
+    const updates = req.body;
+    const userId = req.params.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Optional: Gymadmin can only update trainer/member
+    if (req.user.role === "gymadmin" && !["trainer", "member"].includes(user.role)) {
+      return res.status(403).json({ message: "Gymadmin can only update trainer/member" });
+    }
+
+    Object.assign(user, updates); // merge changes
+    await user.save();
+
+    res.status(200).json({ message: "User updated", user });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userToDelete = await User.findById(req.params.id);
+
+    if (!userToDelete) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Optional: Prevent gymadmin from deleting other gymadmin or superadmin
+    if (req.user.role === "gymadmin" && userToDelete.role !== "trainer" && userToDelete.role !== "member") {
+      return res.status(403).json({ message: "Gymadmin can only delete trainer or member" });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ message: "Server error while deleting user" });
+  }
+};
+
+
+// DELETE USER
+// exports.deleteUser = async (req, res) => {
+//   try {
+//     const user = await User.findByIdAndDelete(req.params.id);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     res.status(200).json({ message: "User deleted successfully" });
+//   } catch (error) {
+//     console.error("Error deleting user:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
 
 // Get users by business ID
 exports.getUsersByBusiness = async (req, res) => {

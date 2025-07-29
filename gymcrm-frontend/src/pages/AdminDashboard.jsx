@@ -74,6 +74,52 @@ export default function AdminDashboard() {
     }
   };
 
+  const [editMode, setEditMode] = useState(false);
+const [editingUser, setEditingUser] = useState(null);
+
+// on Edit click
+const handleEdit = (admin) => {
+  setEditingUser(admin);
+  setForm({
+    name: admin.name || "",
+    email: admin.email || "",
+    password: "", // Don't pre-fill passwords for security
+    phone: admin.phone || "",
+    dob: admin.dob || "",
+    gender: admin.gender || "male",
+    role: admin.role || "gymadmin",
+  });
+  setEditMode(true);
+};
+
+
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch(`http://localhost:5000/api/users/${editingUser._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMessage("✅ User updated");
+      setEditMode(false);
+      setForm(defaultFormState);
+      fetchAdmins();
+    } else {
+      setMessage(`❌ ${data.message}`);
+    }
+  } catch (err) {
+    console.error(err);
+    setMessage("❌ Server error while updating");
+  }
+};
+
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this admin?")) return;
     try {
@@ -120,8 +166,12 @@ export default function AdminDashboard() {
 
         {/* Add Admin Form */}
         <div className="bg-gray-50 p-6 rounded-md border mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">➕ Create New Gym Admin</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+  {editMode ? "✏️ Edit Gym Admin" : "➕ Create New Gym Admin"}
+</h2>
+
+         <form onSubmit={editMode ? handleUpdate : handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <input name="name" value={form.name} onChange={handleChange} placeholder="Full Name" required className="p-2 border rounded" />
             <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" required className="p-2 border rounded" />
             <input name="password" value={form.password} onChange={handleChange} placeholder="Password" type="password" required className="p-2 border rounded" />
@@ -131,9 +181,13 @@ export default function AdminDashboard() {
               <option value="female">Female</option>
             </select>
             <input name="dob" value={form.dob} onChange={handleChange} type="date" className="p-2 border rounded" />
-            <button type="submit" className="col-span-1 md:col-span-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-              Create Gym Admin
-            </button>
+            <button
+  type="submit"
+  className={`col-span-1 md:col-span-2 py-2 rounded text-white ${editMode ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}`}
+>
+  {editMode ? "Update Admin" : "Create Gym Admin"}
+</button>
+
           </form>
         </div>
 
@@ -168,10 +222,11 @@ export default function AdminDashboard() {
                         Delete
                       </button>
                       <button
-                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                      >
-                        Edit
-                      </button>
+  onClick={() => handleEdit(admin)}
+  className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+>
+  Edit
+</button>
                     </td>
                   </tr>
                 ))}

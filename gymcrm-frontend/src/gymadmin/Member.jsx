@@ -9,7 +9,7 @@ const Members = () => {
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/members/all');
+      const res = await fetch('http://localhost:5000/api/users?role=member');
       const data = await res.json();
       setMembers(data.reverse());
     } catch (err) {
@@ -129,7 +129,7 @@ const Members = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* Members Grid (4 per row) */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {members
           .filter((m) =>
